@@ -55,17 +55,17 @@ internal class Day2 : DayX
 				string[] itemSplit = item.Split(' ');
 				int count = int.Parse(itemSplit[0]);
 				string color = itemSplit[1];
-				if (color == "red")
+				switch (color)
 				{
-					red = count;
-				}
-				else if (color == "green")
-				{
-					green = count;
-				}
-				else if (color == "blue")
-				{
-					blue = count;
+					case "red":
+						red = count;
+						break;
+					case "green":
+						green = count;
+						break;
+					case "blue":
+						blue = count;
+						break;
 				}
 			}
 
