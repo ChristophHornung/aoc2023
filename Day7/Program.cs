@@ -30,7 +30,7 @@ internal class Program
 				line = input.ReadLine();
 			}
 
-			hands.Sort(new HandComparer(isPart2));
+			hands.Sort(new HandComparer());
 
 			long result = hands.Select((h, i) => (i + 1) * h.Item2).Sum();
 			this.ReportResult(result);
@@ -58,13 +58,6 @@ internal class Program
 
 internal class HandComparer : IComparer<(int[], int)>
 {
-	private readonly bool isPart2;
-
-	public HandComparer(bool isPart2)
-	{
-		this.isPart2 = isPart2;
-	}
-
 	public int Compare((int[], int) x, (int[], int) y)
 	{
 		int rankX = this.GetRankWithJ(x.Item1);
