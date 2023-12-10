@@ -86,6 +86,8 @@ internal class Program
 		private void Print(List<Tile> path, Dictionary<(int x, int y), Tile> tiles, HashSet<Tile> leftOfPath,
 			HashSet<Tile> rightOfPath)
 		{
+			// Set console to unicode
+			Console.OutputEncoding = System.Text.Encoding.UTF8;
 			for (int y = 0; y <= tiles.Max(t => t.Key.y); y++)
 			{
 				for (int x = 0; x <= tiles.Max(t => t.Key.x); x++)
