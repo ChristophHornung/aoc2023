@@ -36,4 +36,12 @@ public class DayX
 		int day = int.Parse(typeName[(typeName.IndexOf('y') + 1)..]);
 		return day;
 	}
+
+	protected void Print(List<List<char>> map)
+	{
+		foreach (List<char> chars in map)
+		{
+			Console.WriteLine(new string(chars.ToArray()));
+		}
+	}
 }
