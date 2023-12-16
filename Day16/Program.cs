@@ -16,6 +16,20 @@ internal class Day16 : DayX
 	{
 	}
 
+	private static void WriteEnergized(Dictionary<(int x, int y), Direction> existing)
+	{
+		int y;
+		for (y = 0; y <= existing.Keys.Max(k => k.y); y++)
+		{
+			for (int x = 0; x <= existing.Keys.Max(k => k.x); x++)
+			{
+				Console.Write(existing[(x, y)] != Direction.None ? '#' : ' ');
+			}
+
+			Console.WriteLine();
+		}
+	}
+
 	public void Run()
 	{
 		StreamReader stream = this.GetInput();
@@ -40,135 +54,140 @@ internal class Day16 : DayX
 			line = stream.ReadLine();
 		}
 
+		int maxY = y - 1;
+		int maxX = map.Keys.Max(k => k.x);
+
+		Dictionary<(int x, int y), Direction> existing = Day16.Empty(map);
+
+		this.TraceBeam(map, (0, 0), Direction.Right, existing);
+
+		this.ReportResult(existing.Count(c => c.Value != Direction.None));
+
+		long energized = 0;
+		for (int yI = 0; yI <= maxY; yI++)
+		{
+			existing = Day16.Empty(map);
+			this.TraceBeam(map, (0, yI), Direction.Right, existing);
+			energized = Math.Max(energized, existing.Count(c => c.Value != Direction.None));
+			existing = Day16.Empty(map);
+			this.TraceBeam(map, (maxX, yI), Direction.Left, existing);
+			energized = Math.Max(energized, existing.Count(c => c.Value != Direction.None));
+		}
+
+		for (int xI = 0; xI <= maxX; xI++)
+		{
+			existing = Day16.Empty(map);
+			this.TraceBeam(map, (xI, 0), Direction.Down, existing);
+			energized = Math.Max(energized, existing.Count(c => c.Value != Direction.None));
+			existing = Day16.Empty(map);
+			this.TraceBeam(map, (xI, maxY), Direction.Up, existing);
+			energized = Math.Max(energized, existing.Count(c => c.Value != Direction.None));
+		}
+
+		this.ReportResult(energized);
+	}
+
+	private static Dictionary<(int x, int y), Direction> Empty(Dictionary<(int x, int y), Mirror> map)
+	{
 		Dictionary<(int x, int y), Direction> existing = new();
 		foreach ((int xK, int yK) in map.Keys)
 		{
 			existing[(xK, yK)] = Direction.None;
 		}
 
-		this.TraceBeam(map, (0, 0), Direction.Right, existing);
-
-		for (y = 0; y <= existing.Keys.Max(k => k.y); y++)
-		{
-			for (int x = 0; x <= existing.Keys.Max(k => k.x); x++)
-			{
-				Console.Write(map[(x, y)] switch
-				{
-					Mirror.Empty => '.',
-					Mirror.Slash => '/',
-					Mirror.Backslash => '\\',
-					Mirror.Horizontal => '-',
-					Mirror.Vertical => '|'
-				});
-			}
-
-			Console.WriteLine();
-		}
-
-		Day16.WriteEnergized(existing);
-
-		this.ReportResult(existing.Count(c => c.Value != Direction.None));
-	}
-
-	private static void WriteEnergized(Dictionary<(int x, int y), Direction> existing)
-	{
-		int y;
-		for (y = 0; y <= existing.Keys.Max(k => k.y); y++)
-		{
-			for (int x = 0; x <= existing.Keys.Max(k => k.x); x++)
-			{
-				Console.Write(existing[(x, y)] != Direction.None ? '#' : ' ');
-			}
-
-			Console.WriteLine();
-		}
+		return existing;
 	}
 
 	private void TraceBeam(Dictionary<(int x, int y), Mirror> map, (int x, int y) position, Direction direction,
 		Dictionary<(int x, int y), Direction> existing)
 	{
-		if (position.x < 0 || position.y < 0)
+		while (true)
 		{
-			return;
-		}
+			if (position.x < 0 || position.y < 0)
+			{
+				return;
+			}
 
-		if (position.x > map.Keys.Max(k => k.x) || position.y > map.Keys.Max(k => k.y))
-		{
-			return;
-		}
+			if (position.x > map.Keys.Max(k => k.x) || position.y > map.Keys.Max(k => k.y))
+			{
+				return;
+			}
 
-		if (existing[position].HasFlag(direction))
-		{
-			return;
-		}
+			if (existing[position].HasFlag(direction))
+			{
+				return;
+			}
 
-		existing[position] |= direction;
-		Mirror mirror = map[position];
-		switch (mirror)
-		{
-			case Mirror.Empty:
-				this.TraceBeam(map, this.GetNext(position, direction), direction, existing);
-				break;
-			case Mirror.Slash:
-				direction = direction switch
-				{
-					Direction.Right => Direction.Up,
-					Direction.Up => Direction.Right,
-					Direction.Left => Direction.Down,
-					Direction.Down => Direction.Left,
-					_ => throw new ArgumentOutOfRangeException(nameof(direction), direction, null)
-				};
-				this.TraceBeam(map, this.GetNext(position, direction), direction, existing);
-				break;
-			case Mirror.Backslash:
-				direction = direction switch
-				{
-					Direction.Left => Direction.Up,
-					Direction.Up => Direction.Left,
-					Direction.Right => Direction.Down,
-					Direction.Down => Direction.Right,
-					_ => throw new ArgumentOutOfRangeException(nameof(direction), direction, null)
-				};
-				this.TraceBeam(map, this.GetNext(position, direction), direction, existing);
-				break;
-			case Mirror.Horizontal:
-				switch (direction)
-				{
-					case Direction.Left:
-					case Direction.Right:
-						this.TraceBeam(map, this.GetNext(position, direction), direction, existing);
-						break;
-					case Direction.Up:
-					case Direction.Down:
-						this.TraceBeam(map, this.GetNext(position, Direction.Left), Direction.Left, existing);
-						this.TraceBeam(map, this.GetNext(position, Direction.Right), Direction.Right, existing);
-						break;
-					default:
-						throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
-				}
+			existing[position] |= direction;
+			Mirror mirror = map[position];
 
-				break;
-			case Mirror.Vertical:
-				switch (direction)
-				{
-					case Direction.Left:
-					case Direction.Right:
-						this.TraceBeam(map, this.GetNext(position, Direction.Up), Direction.Up, existing);
-						this.TraceBeam(map, this.GetNext(position, Direction.Down), Direction.Down, existing);
-						break;
-					case Direction.Up:
-					case Direction.Down:
-						this.TraceBeam(map, this.GetNext(position, direction), direction, existing);
-						break;
-					default:
-						throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
-				}
+			switch (mirror)
+			{
+				case Mirror.Empty:
+					position = this.GetNext(position, direction);
+					break;
+				case Mirror.Slash:
+					direction = direction switch
+					{
+						Direction.Right => Direction.Up,
+						Direction.Up => Direction.Right,
+						Direction.Left => Direction.Down,
+						Direction.Down => Direction.Left,
+						_ => throw new ArgumentOutOfRangeException(nameof(direction), direction, null)
+					};
+					position = this.GetNext(position, direction);
+					break;
+				case Mirror.Backslash:
+					direction = direction switch
+					{
+						Direction.Left => Direction.Up,
+						Direction.Up => Direction.Left,
+						Direction.Right => Direction.Down,
+						Direction.Down => Direction.Right,
+						_ => throw new ArgumentOutOfRangeException(nameof(direction), direction, null)
+					};
+					position = this.GetNext(position, direction);
+					break;
+				case Mirror.Horizontal:
+					switch (direction)
+					{
+						case Direction.Left:
+						case Direction.Right:
+							position = this.GetNext(position, direction);
+							break;
+						case Direction.Up:
+						case Direction.Down:
+							this.TraceBeam(map, this.GetNext(position, Direction.Left), Direction.Left, existing);
+							this.TraceBeam(map, this.GetNext(position, Direction.Right), Direction.Right, existing);
+							return;
+						default:
+							throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
+					}
 
-				break;
-			default:
-				throw new ArgumentOutOfRangeException();
+					break;
+				case Mirror.Vertical:
+					switch (direction)
+					{
+						case Direction.Left:
+						case Direction.Right:
+							this.TraceBeam(map, this.GetNext(position, Direction.Up), Direction.Up, existing);
+							this.TraceBeam(map, this.GetNext(position, Direction.Down), Direction.Down, existing);
+							return;
+						case Direction.Up:
+						case Direction.Down:
+							position = this.GetNext(position, direction);
+							break;
+						default:
+							throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
+					}
+
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
 		}
 	}
+
 
 	private (int x, int y) GetNext((int x, int y) position, Direction direction)
 	{
