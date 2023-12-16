@@ -4,7 +4,7 @@ using Base;
 
 internal class Program
 {
-	static void Main(string[] args)
+	private static void Main(string[] args)
 	{
 		new Day12().Run(false);
 		new Day12().Run(true);
@@ -13,6 +13,8 @@ internal class Program
 
 internal class Day12 : DayX
 {
+	private static Dictionary<string, long> cache = new();
+
 	public void Run(bool isPart2)
 	{
 		StreamReader stream = this.GetInput();
@@ -30,12 +32,12 @@ internal class Day12 : DayX
 			}
 
 			//result += GetArrangements(springs, groups);
-			result += GetArrangements2(springs, groups, 0);
+			result += this.GetArrangements2(springs, groups);
 			Console.Write("+");
 			line = stream.ReadLine();
 		}
 
-		ReportResult(result);
+		this.ReportResult(result);
 	}
 
 	private long GetArrangements(string line, List<int> groups)
@@ -43,31 +45,40 @@ internal class Day12 : DayX
 		int unknown = line.IndexOf('?');
 		if (unknown == -1)
 		{
-			return IsValid(line, groups) ? 1 : 0;
+			return this.IsValid(line, groups) ? 1 : 0;
 		}
 
 		string line1 = line[..unknown] + '.' + line[(unknown + 1)..];
 		string line2 = line[..unknown] + '#' + line[(unknown + 1)..];
-		long cLine1 = IsValid(line1, groups) ? GetArrangements(line1, groups) : 0;
-		long cLine2 = IsValid(line2, groups) ? GetArrangements(line2, groups) : 0;
+		long cLine1 = this.IsValid(line1, groups) ? this.GetArrangements(line1, groups) : 0;
+		long cLine2 = this.IsValid(line2, groups) ? this.GetArrangements(line2, groups) : 0;
 		return cLine1 + cLine2;
 	}
 
-	private long GetArrangements2(string line, List<int> groups, int groupIndex)
+	private long GetArrangements2(string line, List<int> groups)
 	{
 		if (line.Length == 0)
 		{
-			return groupIndex == groups.Count ? 1 : 0;
+			return groups.Count == 0 ? 1 : 0;
 		}
 
-		long arrangements = 0;
+		if (line.Length < groups.Sum() + groups.Count - 1)
+		{
+			return 0;
+		}
+
+		string key = line + string.Join(',', groups);
+		if (Day12.cache.TryGetValue(key, out long arrangements))
+		{
+			return arrangements;
+		}
 
 		if (line[0] is '#' or '?')
 		{
 			//Start a new group
-			if (groupIndex < groups.Count)
+			if (groups.Count>0)
 			{
-				int expectedGroup = groups[groupIndex];
+				int expectedGroup = groups[0];
 				bool canStart = true;
 				for (int i = 0; i < expectedGroup; i++)
 				{
@@ -87,14 +98,17 @@ internal class Day12 : DayX
 				if (canStart)
 				{
 					int cut = endsLine ? expectedGroup : expectedGroup + 1;
-					arrangements += GetArrangements2(line[cut..], groups, groupIndex + 1);
+					arrangements += this.GetArrangements2(line[cut..], groups[1..]);
 				}
 			}
 		}
+
 		if (line[0] == '.' || line[0] == '?')
 		{
-			arrangements += GetArrangements2(line[1..], groups, groupIndex);
+			arrangements += this.GetArrangements2(line[1..], groups);
 		}
+
+		Day12.cache.Add(key, arrangements);
 
 		return arrangements;
 	}
