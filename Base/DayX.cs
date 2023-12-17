@@ -44,4 +44,11 @@ public class DayX
 			Console.WriteLine(new string(chars.ToArray()));
 		}
 	}
+
+	protected int ModThatMakesSense(int x, int m)
+	{
+		// Why oh wy do you always have to be so difficult, C#?
+		int r = x % m;
+		return r < 0 ? r + m : r;
+	}
 }

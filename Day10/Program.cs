@@ -153,13 +153,6 @@ internal class Program
 			return visited;
 		}
 
-		int ModThatMakesSense(int x, int m)
-		{
-			// Why oh wy do you always have to be so difficult, C#?
-			int r = x % m;
-			return r < 0 ? r + m : r;
-		}
-
 		private (HashSet<Tile> leftOfPath, HashSet<Tile> rightOfPath) TraceOutsides(Tile startTile,
 			Direction? direction, Dictionary<(int x, int y), Tile> tiles, HashSet<Tile> pathTiles)
 		{
